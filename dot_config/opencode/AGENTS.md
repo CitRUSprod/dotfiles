@@ -18,3 +18,5 @@ If a command fails with a quota error, inform the user and suggest `npx ctx7@lat
 <!-- context7 -->
 
 Никогда не используй флаг `--no-verify` с git командами.
+
+Никогда не принимай Pull Request'ы самостоятельно.
