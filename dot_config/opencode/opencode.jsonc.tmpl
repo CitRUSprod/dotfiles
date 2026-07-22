@@ -11,13 +11,23 @@
             },
             "models": {
                 "super-brain": {
-                    "name": "Super Brain"
+                    "name": "Super Brain",
+                    "modalities": {
+                        "input": ["text"]
+                    }
                 },
                 "brain": {
-                    "name": "Brain"
+                    "name": "Brain",
+                    "modalities": {
+                        "input": ["text"]
+                    }
                 },
                 "vision": {
-                    "name": "Vision"
+                    "name": "Vision",
+                    "modalities": {
+                        "input": ["text", "image"]
+                    },
+                    "attachment": true
                 }
             }
         }
