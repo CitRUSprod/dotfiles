@@ -1,12 +1,13 @@
 {
     "$schema": "https://opencode.ai/config.json",
+    "plugin": ["@sveltejs/opencode"],
     "provider": {
         "omniroute": {
             "npm": "@ai-sdk/openai-compatible",
             "name": "OmniRoute",
             "options": {
-"baseURL": "{{ .opencode.omniroute.baseURL }}",
-"apiKey": "{{ .opencode.omniroute.apiKey }}"
+                "baseURL": "{{ .opencode.omniroute.baseURL }}",
+                "apiKey": "{{ .opencode.omniroute.apiKey }}"
             },
             "models": {
                 "super-brain": {

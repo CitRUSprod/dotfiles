@@ -1,0 +1,17 @@
+set -g fish_color_command green
+set -g fish_color_param yellow
+set -g fish_color_comment white
+set -g fish_color_quote magenta
+set -g fish_color_valid_path blue
+
+# starship
+starship init fish | source
+
+# fnm
+fnm env --use-on-cd | source
+
+# opencode
+fish_add_path /home/citrus/.opencode/bin
+
+# context7
+set -gx CONTEXT7_API_KEY "{{ .context7.apiKey }}"

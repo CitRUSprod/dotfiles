@@ -10,3 +10,5 @@
         [data.opencode.omniroute]
             apiKey = "sk-your-api-key"
             baseURL = "https://api.example.com/v1"
+    [data.context7]
+        apiKey = ""

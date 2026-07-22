@@ -6,7 +6,7 @@
 ## Содержание
 
 - [Быстрый старт на новой машине](#быстрый-старт-на-новой-машине)
-- [Состав репозитория](#состав-репозитория)
+- [Состав dotfiles](#состав-dotfiles)
 - [Как устроен chezmoi](#как-устроен-chezmoi)
 - [Управление файлами](#управление-файлами)
     - [Добавить файл под управление](#добавить-файл-под-управление)
@@ -30,15 +30,18 @@ cp ~/.local/share/chezmoi/chezmoi.example.toml ~/.config/chezmoi/chezmoi.toml
 nano ~/.config/chezmoi/chezmoi.toml
 
 # Применить
-chezmoi apply
+chezmoi apply -v
 ```
 
-## Состав репозитория
+## Состав dotfiles
 
 | Путь в домашней папке | Путь в chezmoi |
-|----------------------|---------------|
+|---|---|
 | `~/.gitconfig` | `dot_gitconfig.tmpl` |
 | `~/.config/opencode/opencode.jsonc` | `dot_config/opencode/opencode.jsonc.tmpl` |
+| `~/.config/opencode/AGENTS.md` | `dot_config/opencode/AGENTS.md` |
+| `~/.config/fish/config.fish` | `dot_config/private_fish/config.fish.tmpl` |
+| `~/.agents/skills/` | `dot_agents/exact_skills/` |
 
 ## Как устроен chezmoi
 
@@ -55,7 +58,7 @@ chezmoi изменяет имена файлов по правилам:
 
 1. `chezmoi add ~/.config/foo` — взять файл под управление
 2. `chezmoi edit ~/.config/foo` — изменить исходник (не трогая файл в `~`)
-3. `chezmoi apply` — записать изменения в `~`
+3. `chezmoi apply -v` — записать изменения в `~`
 
 Файлы с суффиксом `.tmpl` перед применением обрабатываются как шаблоны Go.
 
@@ -71,7 +74,7 @@ chezmoi add ~/.config/opencode/opencode.jsonc
 После этого можно отредактировать исходник и применить:
 
 ```sh
-chezmoi apply
+chezmoi apply -v
 ```
 
 Если нужно изменить файл, не трогая целевой:
@@ -85,7 +88,7 @@ chezmoi edit ~/.config/opencode/opencode.jsonc
 ```sh
 chezmoi forget ~/.config/opencode/opencode.jsonc   # забыть файл
 rm "~/.local/share/chezmoi/dot_config/opencode/opencode.jsonc.tmpl"  # удалить исходник
-chezmoi apply                                      # (опционально) удалить файл из ~
+chezmoi apply -v                                  # (опционально) удалить файл из ~
 ```
 
 ### Шаблоны (Go templates)
@@ -144,7 +147,7 @@ chezmoi add --template ~/.config/opencode/opencode.jsonc
 | Команда | Что делает |
 |---------|-----------|
 | `chezmoi diff` | Показать отличия между исходником и целевым файлом |
-| `chezmoi apply` | Применить все изменения — записать файлы в `~` |
+| `chezmoi apply -v` | Применить все изменения — записать файлы в `~` |
 | `chezmoi status` | Показать статус всех файлов |
 | `chezmoi add <path>` | Добавить файл из `~` под управление |
 | `chezmoi edit <path>` | Отредактировать исходник (в `$EDITOR`) |
