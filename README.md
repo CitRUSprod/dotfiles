@@ -5,16 +5,40 @@
 
 ## Содержание
 
-- [Как устроен chezmoi](#как-устроен-chezmoi)
 - [Быстрый старт на новой машине](#быстрый-старт-на-новой-машине)
+- [Состав репозитория](#состав-репозитория)
+- [Как устроен chezmoi](#как-устроен-chezmoi)
 - [Управление файлами](#управление-файлами)
     - [Добавить файл под управление](#добавить-файл-под-управление)
     - [Удалить файл из управления](#удалить-файл-из-управления)
     - [Шаблоны (Go templates)](#шаблоны-go-templates)
     - [Сделать существующий файл шаблоном](#сделать-существующий-файл-шаблоном)
 - [Основные команды](#основные-команды)
-- [Состав репозитория](#состав-репозитория)
 - [Полезное](#полезное)
+
+## Быстрый старт на новой машине
+
+```sh
+# Установить chezmoi
+sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "~/.local/bin"
+
+# Клонировать
+chezmoi init https://github.com/CitRUSprod/dotfiles.git
+
+# Создать конфигурацию из примера (обязательно — без неё шаблоны не сработают)
+cp ~/.local/share/chezmoi/chezmoi.example.toml ~/.config/chezmoi/chezmoi.toml
+nano ~/.config/chezmoi/chezmoi.toml
+
+# Применить
+chezmoi apply
+```
+
+## Состав репозитория
+
+| Путь в домашней папке | Путь в chezmoi |
+|----------------------|---------------|
+| `~/.gitconfig` | `dot_gitconfig.tmpl` |
+| `~/.config/opencode/opencode.jsonc` | `dot_config/opencode/opencode.jsonc.tmpl` |
 
 ## Как устроен chezmoi
 
@@ -34,23 +58,6 @@ chezmoi изменяет имена файлов по правилам:
 3. `chezmoi apply` — записать изменения в `~`
 
 Файлы с суффиксом `.tmpl` перед применением обрабатываются как шаблоны Go.
-
-## Быстрый старт на новой машине
-
-```sh
-# Установить chezmoi
-sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "~/.local/bin"
-
-# Клонировать
-chezmoi init https://github.com/CitRUSprod/dotfiles.git
-
-# Создать конфигурацию из примера (обязательно — без неё шаблоны не сработают)
-cp ~/.local/share/chezmoi/chezmoi.example.toml ~/.config/chezmoi/chezmoi.toml
-nano ~/.config/chezmoi/chezmoi.toml
-
-# Применить
-chezmoi apply
-```
 
 ## Управление файлами
 
@@ -144,13 +151,6 @@ chezmoi add --template ~/.config/opencode/opencode.jsonc
 | `chezmoi update` | Подтянуть изменения из git и применить |
 | `chezmoi cd` | Перейти в директорию репозитория |
 | `chezmoi unmanaged` | Показать файлы в `~`, не под управлением |
-
-## Состав репозитория
-
-| Путь в домашней папке | Путь в chezmoi |
-|----------------------|---------------|
-| `~/.gitconfig` | `dot_gitconfig.tmpl` |
-| `~/.config/opencode/opencode.jsonc` | `dot_config/opencode/opencode.jsonc.tmpl` |
 
 ## Полезное
 
