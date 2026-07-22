@@ -1,0 +1,24 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "provider": {
+        "omniroute": {
+            "npm": "@ai-sdk/openai-compatible",
+            "name": "OmniRoute",
+            "options": {
+"baseURL": "{{ .opencode.omniroute.baseURL }}",
+"apiKey": "{{ .opencode.omniroute.apiKey }}"
+            },
+            "models": {
+                "super-brain": {
+                    "name": "Super Brain"
+                },
+                "brain": {
+                    "name": "Brain"
+                },
+                "vision": {
+                    "name": "Vision"
+                }
+            }
+        }
+    }
+}
