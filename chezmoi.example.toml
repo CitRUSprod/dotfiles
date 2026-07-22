@@ -1,0 +1,12 @@
+# Пример конфигурационного файла chezmoi.
+# Скопируйте в ~/.config/chezmoi/chezmoi.toml и заполните своими данными.
+# Исключён из chezmoi apply через .chezmoiignore.
+
+[data]
+    [data.git]
+        name = "Your Name"
+        email = "your@email.com"
+    [data.opencode]
+        [data.opencode.omniroute]
+            apiKey = "sk-your-api-key"
+            baseURL = "https://api.example.com/v1"

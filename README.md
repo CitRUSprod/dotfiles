@@ -39,10 +39,14 @@ chezmoi изменяет имена файлов по правилам:
 
 ```sh
 # Установить chezmoi
-sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$HOME/.local/bin"
+sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "~/.local/bin"
 
-# Клонировать и применить
+# Клонировать
 chezmoi init https://github.com/CitRUSprod/dotfiles.git
+
+# Создать конфигурацию из примера (обязательно — без неё шаблоны не сработают)
+cp ~/.local/share/chezmoi/chezmoi.example.toml ~/.config/chezmoi/chezmoi.toml
+nano ~/.config/chezmoi/chezmoi.toml
 
 # Применить
 chezmoi apply
