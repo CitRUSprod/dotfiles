@@ -16,3 +16,5 @@ For version-specific docs, use `/org/project/version` from the `library` output 
 
 If a command fails with a quota error, inform the user and suggest `npx ctx7@latest login` or setting `CONTEXT7_API_KEY` env var for higher limits. Do not silently fall back to training data.
 <!-- context7 -->
+
+Никогда не используй флаг `--no-verify` с git командами.
