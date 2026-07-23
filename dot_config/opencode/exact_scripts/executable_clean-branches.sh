@@ -29,28 +29,9 @@ else
 fi
 info "Базовая ветка: $BASE"
 
-if [ -n "$(git status --porcelain)" ]; then
-    err "❌ Есть незакоммиченные изменения. Зафиксируйте или отложите их (git stash)."
-    exit 1
-fi
-
 CURRENT=$(git branch --show-current)
-NEED_SWITCH=false
-if [ "$CURRENT" != "$BASE" ]; then
-    NEED_SWITCH=true
-    info "Переключаюсь на $BASE..."
-    git checkout "$BASE"
-fi
-
-trap 'if [ "$NEED_SWITCH" = true ]; then git checkout "$CURRENT" 2>/dev/null; fi' EXIT
-
-info "Обновляю $BASE..."
-git pull --ff-only
-info "Обновляю remote references..."
-git fetch origin --prune
-
 PROTECTED="^(main|master|HEAD)$"
-if [ "$NEED_SWITCH" = true ]; then
+if [ "$CURRENT" != "$BASE" ]; then
     PROTECTED="^(main|master|HEAD|$(escape_regex "$CURRENT"))$"
 fi
 
@@ -91,43 +72,109 @@ done < <(git branch --list)
 ALL=("${STAGE1[@]}" "${STAGE2[@]}")
 if [ ${#ALL[@]} -eq 0 ]; then
     ok "Нет влитых веток для удаления."
-else
-    info "Найдено веток на удаление: ${#ALL[@]}"
-    echo -e "${YELLOW}---${NC}"
+    exit 0
+fi
 
+if [ "$DRY_RUN" = true ]; then
+    info "Найдено веток на удаление: ${#ALL[@]}"
     for branch in "${STAGE1[@]}"; do
         echo -e "  ${YELLOW}--merged:${NC} $branch"
     done
     for branch in "${STAGE2[@]}"; do
         echo -e "  ${YELLOW}diff:     ${NC} $branch"
     done
-    echo -e "${YELLOW}---${NC}"
-
-    if [ "$DRY_RUN" = true ]; then
-        ok "Dry-run: ничего не удалено."
-    else
-        for branch in "${STAGE1[@]}"; do
-            echo -e "  ${YELLOW}--merged:${NC} $branch"
-            if git branch -d "$branch" 2>/dev/null; then
-                if [ "$HAS_ORIGIN" = true ]; then
-                    git push origin --delete "$branch" 2>&1 || err "✗ Ошибка удаления $branch на remote (см. выше)"
-                fi
-            else
-                err "✗ Не удалось удалить локальную ветку $branch, remote не трогаю"
-            fi
-        done
-
-        for branch in "${STAGE2[@]}"; do
-            echo -e "  ${YELLOW}diff:     ${NC} $branch"
-            if git branch -d "$branch" 2>/dev/null || git branch -D "$branch" 2>/dev/null; then
-                if [ "$HAS_ORIGIN" = true ]; then
-                    git push origin --delete "$branch" 2>&1 || err "✗ Ошибка удаления $branch на remote (см. выше)"
-                fi
-            else
-                err "✗ Не удалось удалить локальную ветку $branch, remote не трогаю"
-            fi
-        done
-
-        ok "Удалено веток: ${#ALL[@]} (--merged: ${#STAGE1[@]}, diff: ${#STAGE2[@]})"
-    fi
+    ok "Dry-run: ничего не удалено."
+    exit 0
 fi
+
+if [ -n "$(git status --porcelain)" ]; then
+    err "❌ Есть незакоммиченные изменения. Зафиксируйте или отложите их (git stash)."
+    exit 1
+fi
+
+NEED_SWITCH=false
+if [ "$CURRENT" != "$BASE" ]; then
+    NEED_SWITCH=true
+    info "Переключаюсь на $BASE..."
+    git checkout "$BASE"
+fi
+
+trap 'if [ "$NEED_SWITCH" = true ]; then git checkout "$CURRENT" 2>/dev/null; fi' EXIT
+
+info "Обновляю $BASE..."
+git pull --ff-only
+info "Обновляю remote references..."
+git fetch origin --prune
+
+DELETED=0
+FAILED_LOCAL=()
+FAILED_REMOTE=()
+
+for branch in "${STAGE1[@]}"; do
+    echo -e "  ${YELLOW}--merged:${NC} $branch"
+
+    if [ "$HAS_ORIGIN" = true ]; then
+        if git push origin --delete "$branch" 2>&1; then
+            if git branch -d "$branch"; then
+                ((DELETED++))
+            else
+                err "✗ $branch удалена на remote, но не найдена локально"
+            fi
+        else
+            err "✗ Не удалось удалить $branch на remote"
+            FAILED_REMOTE+=("$branch")
+        fi
+    else
+        if git branch -d "$branch"; then
+            ((DELETED++))
+        else
+            err "✗ Не удалось удалить локальную ветку $branch"
+            FAILED_LOCAL+=("$branch")
+        fi
+    fi
+done
+
+for branch in "${STAGE2[@]}"; do
+    echo -e "  ${YELLOW}diff:     ${NC} $branch"
+
+    LOCAL_OK=false
+    if [ "$HAS_ORIGIN" = true ]; then
+        if git push origin --delete "$branch" 2>&1; then
+            if git branch -d "$branch" 2>/dev/null; then
+                LOCAL_OK=true
+            elif [ "$(git rev-list --count "$BASE..$branch" 2>/dev/null)" -eq 0 ]; then
+                git branch -D "$branch" && LOCAL_OK=true
+            fi
+            if [ "$LOCAL_OK" = true ]; then
+                ((DELETED++))
+            else
+                err "✗ $branch удалена на remote, но локально не удалена (содержит незалитые коммиты)"
+                FAILED_LOCAL+=("$branch")
+            fi
+        else
+            err "✗ Не удалось удалить $branch на remote"
+            FAILED_REMOTE+=("$branch")
+        fi
+    else
+        if git branch -d "$branch" 2>/dev/null; then
+            LOCAL_OK=true
+        elif [ "$(git rev-list --count "$BASE..$branch" 2>/dev/null)" -eq 0 ]; then
+            git branch -D "$branch" && LOCAL_OK=true
+        fi
+        if [ "$LOCAL_OK" = true ]; then
+            ((DELETED++))
+        else
+            err "✗ Не удалось удалить локальную ветку $branch"
+            FAILED_LOCAL+=("$branch")
+        fi
+    fi
+done
+
+msg="Удалено веток: $DELETED"
+if [ ${#FAILED_REMOTE[@]} -gt 0 ]; then
+    msg+=", ошибок remote: ${#FAILED_REMOTE[@]}"
+fi
+if [ ${#FAILED_LOCAL[@]} -gt 0 ]; then
+    msg+=", ошибок local: ${#FAILED_LOCAL[@]}"
+fi
+ok "$msg"

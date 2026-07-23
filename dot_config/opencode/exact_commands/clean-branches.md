@@ -1,5 +1,6 @@
 ---
 description: Удаляет локальные и удалённые ветки, влитые в main/master (включая squash merge и rebase merge)
+agent: build
 ---
 
 Запусти скрипт очистки влитых веток:
