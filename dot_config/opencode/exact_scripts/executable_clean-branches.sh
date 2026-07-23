@@ -43,10 +43,11 @@ while IFS= read -r branch; do
     [[ -z "$branch" ]] && continue
     [[ "$branch" =~ $PROTECTED ]] && continue
     STAGE1+=("$branch")
-done < <(git branch --merged "$BASE" | sed 's/^..//')
+done < <(git branch --merged "$BASE")
 
 STAGE2=()
 while IFS= read -r branch; do
+    branch="${branch#\* }"
     branch="${branch#"${branch%%[![:space:]]*}"}"
     branch="${branch%"${branch##*[![:space:]]}"}"
     [[ -z "$branch" ]] && continue
@@ -56,13 +57,12 @@ while IFS= read -r branch; do
     for b in "${STAGE1[@]}"; do
         if [ "$b" = "$branch" ]; then skip=true; break; fi
     done
-    $skip && continue
+    if [ "$skip" = true ]; then continue; fi
 
-    if git rev-parse --abbrev-ref "@{upstream}" &>/dev/null 2>&1 && \
-       git diff "$BASE"..."$branch" --exit-code --quiet 2>/dev/null; then
+    if git diff "$BASE" "$branch" --exit-code --quiet 2>/dev/null; then
         STAGE2+=("$branch")
     fi
-done < <(git branch --list | sed 's/^..//')
+done < <(git branch --list)
 
 ALL=("${STAGE1[@]}" "${STAGE2[@]}")
 if [ ${#ALL[@]} -eq 0 ]; then
@@ -73,14 +73,14 @@ else
 
     for branch in "${STAGE1[@]}"; do
         echo -e "  ${YELLOW}--merged:${NC} $branch"
-        git push origin --delete "$branch" 2>/dev/null || echo "    (удалённая уже удалена)"
-        git branch -d "$branch" 2>/dev/null || echo "    (локальная уже удалена)"
+        git push origin --delete "$branch" || echo "    ✗ ошибка при удалении удалённой: $?"
+        git branch -d "$branch" || echo "    ✗ ошибка при удалении локальной: $?"
     done
 
     for branch in "${STAGE2[@]}"; do
         echo -e "  ${YELLOW}diff:     ${NC} $branch"
-        git push origin --delete "$branch" 2>/dev/null || echo "    (удалённая уже удалена)"
-        git branch -d "$branch" 2>/dev/null || echo "    (локальная уже удалена)"
+        git push origin --delete "$branch" || echo "    ✗ ошибка при удалении удалённой: $?"
+        git branch -d "$branch" || echo "    ✗ ошибка при удалении локальной: $?"
     done
 
     echo -e "${YELLOW}---${NC}"
