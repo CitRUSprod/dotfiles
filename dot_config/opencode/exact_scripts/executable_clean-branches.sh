@@ -10,12 +10,12 @@ info()  { echo -e "${YELLOW}$*${NC}"; }
 ok()    { echo -e "${GREEN}$*${NC}"; }
 err()   { echo -e "${RED}$*${NC}"; }
 
+escape_regex() { sed 's/[.[\*^$()+?{|\\]/\\&/g' <<< "$1"; }
+
 DRY_RUN=false
-AUTO_YES=false
 for arg in "$@"; do
     case "$arg" in
         --dry-run) DRY_RUN=true ;;
-        -y|--yes) AUTO_YES=true ;;
     esac
 done
 
@@ -42,6 +42,8 @@ if [ "$CURRENT" != "$BASE" ]; then
     git checkout "$BASE"
 fi
 
+trap 'if [ "$NEED_SWITCH" = true ]; then git checkout "$CURRENT" 2>/dev/null; fi' EXIT
+
 info "Обновляю $BASE..."
 git pull --ff-only
 info "Обновляю remote references..."
@@ -49,7 +51,7 @@ git fetch origin --prune
 
 PROTECTED="^(main|master|HEAD)$"
 if [ "$NEED_SWITCH" = true ]; then
-    PROTECTED="^(main|master|HEAD|$CURRENT)$"
+    PROTECTED="^(main|master|HEAD|$(escape_regex "$CURRENT"))$"
 fi
 
 HAS_ORIGIN=false
@@ -101,46 +103,31 @@ else
     done
     echo -e "${YELLOW}---${NC}"
 
-    SHOULD_DELETE=false
     if [ "$DRY_RUN" = true ]; then
         ok "Dry-run: ничего не удалено."
-    elif [ "$AUTO_YES" = true ]; then
-        SHOULD_DELETE=true
     else
-        read -r -p "Удалить эти ${#ALL[@]} веток? [y/N] " confirm
-        if [[ "$confirm" =~ ^[yYДд] ]]; then
-            SHOULD_DELETE=true
-        else
-            info "Отменено."
-        fi
-    fi
-
-    if [ "$SHOULD_DELETE" = true ]; then
         for branch in "${STAGE1[@]}"; do
             echo -e "  ${YELLOW}--merged:${NC} $branch"
-            if ! git branch -d "$branch" 2>/dev/null; then
-                err "✗ Не удалось удалить локальную ветку $branch"
-            fi
-            if [ "$HAS_ORIGIN" = true ]; then
-                git push origin --delete "$branch" 2>&1 || err "✗ Ошибка удаления $branch на remote (см. выше)"
+            if git branch -d "$branch" 2>/dev/null; then
+                if [ "$HAS_ORIGIN" = true ]; then
+                    git push origin --delete "$branch" 2>&1 || err "✗ Ошибка удаления $branch на remote (см. выше)"
+                fi
+            else
+                err "✗ Не удалось удалить локальную ветку $branch, remote не трогаю"
             fi
         done
 
         for branch in "${STAGE2[@]}"; do
             echo -e "  ${YELLOW}diff:     ${NC} $branch"
-            if ! git branch -d "$branch" 2>/dev/null && ! git branch -D "$branch" 2>/dev/null; then
-                err "✗ Не удалось удалить локальную ветку $branch"
-            fi
-            if [ "$HAS_ORIGIN" = true ]; then
-                git push origin --delete "$branch" 2>&1 || err "✗ Ошибка удаления $branch на remote (см. выше)"
+            if git branch -d "$branch" 2>/dev/null || git branch -D "$branch" 2>/dev/null; then
+                if [ "$HAS_ORIGIN" = true ]; then
+                    git push origin --delete "$branch" 2>&1 || err "✗ Ошибка удаления $branch на remote (см. выше)"
+                fi
+            else
+                err "✗ Не удалось удалить локальную ветку $branch, remote не трогаю"
             fi
         done
 
         ok "Удалено веток: ${#ALL[@]} (--merged: ${#STAGE1[@]}, diff: ${#STAGE2[@]})"
     fi
-fi
-
-if [ "$NEED_SWITCH" = true ]; then
-    info "Возвращаюсь на $CURRENT..."
-    git checkout "$CURRENT"
 fi
