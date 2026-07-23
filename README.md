@@ -40,6 +40,8 @@ chezmoi apply -v
 | `~/.gitconfig` | `dot_gitconfig.tmpl` |
 | `~/.config/opencode/opencode.jsonc` | `dot_config/opencode/opencode.jsonc.tmpl` |
 | `~/.config/opencode/AGENTS.md` | `dot_config/opencode/AGENTS.md` |
+| `~/.config/opencode/agents/` | `dot_config/opencode/exact_agents/` |
+| `~/.config/opencode/commands/` | `dot_config/opencode/exact_commands/` |
 | `~/.config/fish/config.fish` | `dot_config/private_fish/config.fish.tmpl` |
 | `~/.agents/skills/` | `dot_agents/exact_skills/` |
 
