@@ -1,6 +1,11 @@
 {
     "$schema": "https://opencode.ai/config.json",
     "plugin": ["@sveltejs/opencode"],
+    "permission": {
+        "external_directory": {
+            "/tmp/**": "allow"
+        }
+    },
     "provider": {
         "omniroute": {
             "npm": "@ai-sdk/openai-compatible",
