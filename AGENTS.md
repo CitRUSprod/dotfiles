@@ -29,8 +29,7 @@
 
 ## OpenCode
 
-Кастомные команды и агенты живут в `dot_config/opencode/exact_commands/` и `dot_config/opencode/exact_agents/`.
-Они разворачиваются в `~/.config/opencode/commands/` и `~/.config/opencode/agents/`.
+Кастомные команды живут в `dot_config/opencode/exact_commands/` и разворачиваются в `~/.config/opencode/commands/`.
 Провайдер настроен на OmniRoute через шаблон `dot_config/opencode/opencode.jsonc.tmpl`.
 
 ## Git
