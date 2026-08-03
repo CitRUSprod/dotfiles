@@ -59,7 +59,7 @@ description: Обновляет заголовок и описание откр�
         <сгенерированное тело — без shell-экранирования>
         PR_BODY_EOF
         ```
-    - Выполни:
+    - Попробуй обновить через `gh pr edit`:
         ```
         if gh pr edit <pr_number> --title "<заголовок>" --body-file "$BODY_FILE"; then
             rm -f "$BODY_FILE"
@@ -67,4 +67,19 @@ description: Обновляет заголовок и описание откр�
             echo "Ошибка обновления. Новое тело сохранено в $BODY_FILE"
         fi
         ```
+    - **Важно:** `gh pr edit` может завершиться ошибкой даже при успешном обновлении PR — из-за GraphQL-предупреждения `Projects (classic) is being deprecated ... projectCards`. В этом случае проверь фактические значения PR: `gh pr view <pr_number> --json title,body`. Если заголовок и тело уже обновились — считай обновление успешным и удали `BODY_FILE`. Если обновление не применилось — используй обходной путь через GraphQL:
+        - Получи node ID PR:
+            ```
+            pr_node_id=$(gh api graphql -f query='query { repository(owner: "CitRUSprod", name: "dotfiles") { pullRequest(number: <pr_number>) { id } } }' --jq '.data.repository.pullRequest.id')
+            ```
+            (owner и repo возьми из `pr_url` — `https://github.com/{owner}/{repo}/pull/{number}`)
+        - Обнови заголовок:
+            ```
+            gh api graphql -f query='mutation($p: ID!, $t: String!) { updatePullRequest(input: {pullRequestId: $p, title: $t}) { pullRequest { title } } }' -F p="$pr_node_id" -f t="<заголовок>"
+            ```
+        - Обнови тело:
+            ```
+            gh api graphql -F query='mutation($p: ID!, $b: String!) { updatePullRequest(input: {pullRequestId: $p, body: $b}) { pullRequest { body } } }' -F p="$pr_node_id" -f b="$(cat "$BODY_FILE")"
+            ```
+        - Если обе команды завершились успешно — удали `BODY_FILE` (`rm -f "$BODY_FILE"`). Если хотя бы одна завершилась ошибкой — сообщи пользователю текст ошибки и путь к файлу.
     - Сообщи пользователю ссылку на обновлённый PR (`pr_url`) и кратко перечисли, что изменилось в заголовке и теле.
