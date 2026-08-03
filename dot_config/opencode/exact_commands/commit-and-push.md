@@ -58,10 +58,15 @@ git diff --cached
 git commit -m "<сообщение>"
 ```
 
-- Перед пушем проверь, что удалённый репозиторий `origin` существует (`git remote get-url origin`):
-    - Если `origin` отсутствует — сообщи пользователю, что пушить некуда, и попроси добавить удалённый репозиторий командой `git remote add origin <url>`. После того как пользователь добавит `origin`, выполни пуш.
-    - Если `origin` существует — выполни пуш:
+- Перед пушем определи, есть ли у текущей ветки upstream (`git rev-parse --abbrev-ref --symbolic-full-name @{upstream}`):
+    - Если upstream есть — выполни пуш на его remote:
 
-```
-git push -u origin HEAD
-```
+      ```
+      git push -u <remote> HEAD
+      ```
+
+      где `<remote>` — первая часть upstream (например, для `origin/feat/foo` это `origin`). Извлекается командой `git rev-parse --abbrev-ref --symbolic-full-name @{upstream} | cut -d/ -f1`.
+    - Если upstream отсутствует (команда завершилась ошибкой) — проверь `git remote`:
+        - Если remote-ов нет — сообщи, что пушить некуда, и попроси добавить репозиторий командой `git remote add <url>`.
+        - Если remote один — выполни `git push -u <remote> HEAD`.
+        - Если их несколько — уточни у пользователя, на какой remote пушить.
