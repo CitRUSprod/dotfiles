@@ -22,3 +22,5 @@ If a command fails with a quota error, inform the user and suggest `npx ctx7@lat
 Никогда не принимай Pull Request'ы самостоятельно.
 
 Никогда не используй rebase, amend, force-push и другие команды, переписывающие историю git.
+
+Всегда отвечай на русском, если пользователь не просил иного.
