@@ -16,6 +16,7 @@ description: Обновляет заголовок и описание откр�
         - Иначе — если не удалось извлечь PR, определи PR для текущей ветки.
     - Если PR ещё не определён — получи для текущей ветки: `gh pr view --json number,url,headRefName,baseRefName,title,body`
     - Из результата извлеки: `pr_number`, `pr_url`, `head_ref` (ветка PR), `base_ref` (базовая ветка), текущие `current_title` и `current_body`.
+    - Из `pr_url` (вида `https://github.com/{owner}/{repo}/pull/{number}`) извлеки `pr_owner` и `pr_repo` — владельца и репозиторий.
     - Если PR не найден или команда завершилась ошибкой — сообщи пользователю и прекрати выполнение.
 
 3. **Собери данные для анализа:**
@@ -70,9 +71,8 @@ description: Обновляет заголовок и описание откр�
     - **Важно:** `gh pr edit` может завершиться ошибкой даже при успешном обновлении PR — из-за GraphQL-предупреждения `Projects (classic) is being deprecated ... projectCards`. В этом случае проверь фактические значения PR: `gh pr view <pr_number> --json title,body`. Если заголовок и тело уже обновились — считай обновление успешным и удали `BODY_FILE`. Если обновление не применилось — используй обходной путь через GraphQL:
         - Получи node ID PR:
             ```
-            pr_node_id=$(gh api graphql -f query='query { repository(owner: "CitRUSprod", name: "dotfiles") { pullRequest(number: <pr_number>) { id } } }' --jq '.data.repository.pullRequest.id')
+            pr_node_id=$(gh api graphql -f query='query { repository(owner: "'"$pr_owner"'", name: "'"$pr_repo"'") { pullRequest(number: <pr_number>) { id } } }' --jq '.data.repository.pullRequest.id')
             ```
-            (owner и repo возьми из `pr_url` — `https://github.com/{owner}/{repo}/pull/{number}`)
         - Обнови заголовок:
             ```
             gh api graphql -f query='mutation($p: ID!, $t: String!) { updatePullRequest(input: {pullRequestId: $p, title: $t}) { pullRequest { title } } }' -F p="$pr_node_id" -f t="<заголовок>"
