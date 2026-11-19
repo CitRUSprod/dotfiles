@@ -18,14 +18,16 @@
 
 ## Быстрый старт на новой машине
 
-```sh
-# Установить chezmoi
-sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "~/.local/bin"
+Установить [chezmoi](https://www.chezmoi.io/install).
 
+Потом:
+
+```sh
 # Клонировать
 chezmoi init https://github.com/CitRUSprod/dotfiles.git
 
 # Создать конфигурацию из примера (обязательно — без неё шаблоны не сработают)
+mkdir -p ~/.config/chezmoi
 cp ~/.local/share/chezmoi/chezmoi.example.toml ~/.config/chezmoi/chezmoi.toml
 nano ~/.config/chezmoi/chezmoi.toml
 
